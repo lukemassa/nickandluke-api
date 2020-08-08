@@ -18,7 +18,7 @@ func main() {
     http.HandleFunc("/", HelloServer)
     port := getPort()
     fmt.Printf("Listening on %s", port)
-    http.ListenAndServe(":3000", nil)
+    http.ListenAndServe(port, nil)
 }
 
 func HelloServer(w http.ResponseWriter, r *http.Request) {
