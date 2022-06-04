@@ -1,1 +1,1 @@
-web: bin/jclubtakeaways-api -server
+web: go run main.go --server
