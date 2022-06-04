@@ -35,8 +35,8 @@ func (rh requestHandler) CheckGuest(w http.ResponseWriter, r *http.Request) {
 
 func RequestHandler() requestHandler {
 	guests := make(map[string]string)
-	guests["luke"] = "https://tripadvisor.com"
-	guests["nick"] = "https://twitter.com"
+	guests["luke massa"] = "https://tripadvisor.com"
+	guests["nick andersen"] = "https://twitter.com"
 	return requestHandler{
 		guests: guests,
 	}
