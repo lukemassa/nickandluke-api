@@ -30,9 +30,9 @@ func main() {
 		http.HandleFunc("/guest", rh.CheckGuest)
 		port := getPort()
 		fmt.Printf("Listening on %s", port)
-		http.ListenAndServe(port, nil)
+		panic(http.ListenAndServe(port, nil))
+
 	}
 	fmt.Println()
-
 	fmt.Printf("%v", rh)
 }
