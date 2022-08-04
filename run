@@ -1,0 +1,11 @@
+#!/bin/bash
+
+
+# guest-manager
+export AWS_ACCESS_KEY_ID="AKIA5LHY7TFSUI3H2SEZ"
+export AWS_SECRET_ACCESS_KEY="$(gpg -d guests_manager_secret_key.asc 2>/dev/null)"
+export AWS_REGION=us-east-1
+export AWS_DEFAULT_REGION=us-east-1
+
+
+go run main.go "$@"

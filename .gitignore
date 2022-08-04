@@ -1,0 +1,4 @@
+
+# Don't check in the staging dir
+staging/*
+!staging/.exists
