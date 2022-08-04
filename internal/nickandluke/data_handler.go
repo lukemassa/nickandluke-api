@@ -12,7 +12,6 @@ import (
 
 const bucket = "nickandluke-guests"
 const key = "v1/guests.csv"
-const cache = "staging/guests.csv"
 
 type dataHandler struct {
 	sess *session.Session
@@ -27,7 +26,7 @@ func DataHandler(sess *session.Session) *dataHandler {
 
 func (dh *dataHandler) Download() error {
 
-	file, err := os.Create(cache)
+	file, err := os.Create(guestFile)
 	if err != nil {
 		return err
 	}
@@ -46,5 +45,30 @@ func (dh *dataHandler) Download() error {
 	}
 
 	fmt.Println("Downloaded", file.Name(), numBytes, "bytes")
+	return nil
+}
+
+func (dh *dataHandler) Upload() error {
+
+	file, err := os.Open(guestFile)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+
+	uploader := s3manager.NewUploader(dh.sess)
+
+	uploadedInput, err := uploader.Upload(
+		&s3manager.UploadInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+			Body:   file,
+		})
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Uploaded", file.Name(), uploadedInput.UploadID)
 	return nil
 }
