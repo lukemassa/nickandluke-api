@@ -22,7 +22,7 @@ func getPort() string {
 
 func main() {
 	var opts struct {
-		Action string `long:"action" required:"true" default:"run" choice:"server" choice:"validate" choice:"download" choice:"download-and-server"`
+		Action string `long:"action" required:"true" default:"run" choice:"server" choice:"validate" choice:"download" choice:"download-and-server" choice:"upload"`
 	}
 	_, err := flags.Parse(&opts)
 	if err != nil {
@@ -37,7 +37,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	rh := nickandluke.RequestHandler()
 	dh := nickandluke.DataHandler(sess)
 	if opts.Action == "download" || opts.Action == "download-and-server" {
 		err := dh.Download()
@@ -45,6 +44,7 @@ func main() {
 			panic(err)
 		}
 	}
+	rh := nickandluke.RequestHandler()
 	if opts.Action == "server" || opts.Action == "download-and-server" {
 		http.HandleFunc("/guest", rh.CheckGuest)
 		port := getPort()
@@ -55,6 +55,12 @@ func main() {
 	if opts.Action == "validate" {
 		fmt.Println()
 		fmt.Printf("%v", rh)
+	}
+	if opts.Action == "upload" {
+		err := dh.Upload()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 }

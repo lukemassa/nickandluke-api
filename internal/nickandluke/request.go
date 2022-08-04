@@ -12,6 +12,7 @@ import (
 
 const oneGuestUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdXF80AevtDqkC7ZTynrzXRuwfZCjQPTpsLhCEfuRPSOCCgww/viewform?usp=sf_link"
 const twoGuestsUrl = "https://docs.google.com/forms/d/e/1FAIpQLSevxS_HMScw6Nhcru3ke8GeqWfJnBAA_AdWPc-1eRmgS4G6LQ/viewform?usp=sf_link"
+const guestFile = "staging/guests.csv"
 
 type guests map[string]string
 
@@ -102,7 +103,7 @@ func parseGuests(rows [][]string) guests {
 }
 
 func loadGuests() guests {
-	f, err := os.Open("data/guests.csv")
+	f, err := os.Open(guestFile)
 	if err != nil {
 		log.Fatal(err)
 	}

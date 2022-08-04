@@ -1,1 +1,1 @@
-web: ./bin/nickandluke-api --action server
+web: ./bin/nickandluke-api --action download-and-server
