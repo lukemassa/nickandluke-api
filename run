@@ -8,4 +8,4 @@ export AWS_REGION=us-east-1
 export AWS_DEFAULT_REGION=us-east-1
 
 
-go run main.go "$@"
+exec go run main.go "$@"
