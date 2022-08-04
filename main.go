@@ -1,20 +1,13 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"net/http"
 	"os"
 
+	"github.com/jessevdk/go-flags"
 	nickandluke "github.com/lukemassa/nickandluke-api/internal/nickandluke"
 )
-
-var server bool
-
-func init() {
-	flag.BoolVar(&server, "server", false, "Whether or not to run the server")
-	flag.Parse()
-}
 
 func getPort() string {
 	p := os.Getenv("PORT")
@@ -25,8 +18,15 @@ func getPort() string {
 }
 
 func main() {
+	var opts struct {
+		Action string `long:"action" required:"true" default:"run" choice:"server" choice:"validate" choice:"upload"`
+	}
+	_, err := flags.Parse(&opts)
+	if err != nil {
+		os.Exit(1)
+	}
 	rh := nickandluke.RequestHandler()
-	if server {
+	if opts.Action == "server" {
 		http.HandleFunc("/guest", rh.CheckGuest)
 		port := getPort()
 		fmt.Printf("Listening on %s", port)
