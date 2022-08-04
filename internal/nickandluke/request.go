@@ -113,7 +113,7 @@ func loadGuests() guests {
 
 	// read csv values using csv.Reader
 	csvReader := csv.NewReader(f)
-	csvReader.Comma = '\t'
+	csvReader.Comma = ','
 	data, err := csvReader.ReadAll()
 	if err != nil {
 		log.Fatal(err)
