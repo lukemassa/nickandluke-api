@@ -52,7 +52,7 @@ func main() {
 		panic(http.ListenAndServe(port, nil))
 
 	}
-	if opts.Action == "validate" {
+	if opts.Action == "validate" || opts.Action == "upload" {
 		fmt.Println()
 		fmt.Printf("%v", rh)
 	}
