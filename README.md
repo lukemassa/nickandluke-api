@@ -4,7 +4,7 @@
 Heroku app is called nickandluke-api in lukefmassa@hotmail.com account
 
 ### Deploy
-git push heroku main
+`git push heroku main`
 
 ### Add guest
 
