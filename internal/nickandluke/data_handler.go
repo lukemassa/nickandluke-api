@@ -3,6 +3,7 @@ package nickandluke
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -12,6 +13,7 @@ import (
 
 const bucket = "nickandluke-guests"
 const key = "v1/guests.csv"
+const hashedFile = "hashed.txt"
 
 type dataHandler struct {
 	sess *session.Session
@@ -59,7 +61,7 @@ func (dh *dataHandler) Upload() error {
 
 	uploader := s3manager.NewUploader(dh.sess)
 
-	uploadedInput, err := uploader.Upload(
+	uploadedOutput, err := uploader.Upload(
 		&s3manager.UploadInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
@@ -69,6 +71,23 @@ func (dh *dataHandler) Upload() error {
 		return err
 	}
 
-	fmt.Println("Uploaded", file.Name(), uploadedInput.UploadID)
+	err = saveHash(uploadedOutput)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Uploaded", file.Name(), uploadedOutput.UploadID)
+	return nil
+}
+
+func saveHash(uploadedInput *s3manager.UploadOutput) error {
+	file, err := os.Create(hashedFile)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+	file.WriteString(strings.Trim(*uploadedInput.ETag, "\""))
+	file.WriteString("\n")
 	return nil
 }
