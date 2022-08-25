@@ -14,17 +14,21 @@ const oneGuestUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdXF80AevtDqkC7ZTy
 const twoGuestsUrl = "https://docs.google.com/forms/d/e/1FAIpQLSevxS_HMScw6Nhcru3ke8GeqWfJnBAA_AdWPc-1eRmgS4G6LQ/viewform?usp=sf_link"
 const guestFile = "staging/guests.csv"
 
-type guests map[string]string
+type guestConfiguration struct {
+	guests map[string]string
+	email  string
+}
 
 type requestHandler struct {
-	guests guests
+	guestConfiguration guestConfiguration
 }
 
 func (rh requestHandler) String() string {
 	var sb strings.Builder
-	for guest, url := range rh.guests {
+	for guest, url := range rh.guestConfiguration.guests {
 		sb.WriteString(fmt.Sprintf("%-20s%s\n", guest, url))
 	}
+	sb.WriteString(fmt.Sprintf("Email: %s", rh.guestConfiguration.email))
 
 	return sb.String()
 }
@@ -32,14 +36,16 @@ func (rh requestHandler) String() string {
 type checkResponse struct {
 	Valid bool   `json:"valid"`
 	Form  string `json:"form"`
+	Email string `json:"email"`
 }
 
 func (rh requestHandler) CheckGuest(w http.ResponseWriter, r *http.Request) {
 	res := checkResponse{}
 	name := r.URL.Query().Get("name")
-	if val, ok := rh.guests[name]; ok {
+	if val, ok := rh.guestConfiguration.guests[name]; ok {
 		res.Valid = true
 		res.Form = val
+		res.Email = rh.guestConfiguration.email
 	}
 	js, err := json.Marshal(res)
 	if err != nil {
@@ -56,11 +62,18 @@ func cleanupGuest(guest string) string {
 	return strings.ToLower(strings.TrimSpace(guest))
 }
 
-func parseGuests(rows [][]string) guests {
+func parseGuests(rows [][]string) guestConfiguration {
+	ret := guestConfiguration{}
 	guests := make(map[string]string)
 	numOneGuest := 0
 	numTwoGuests := 0
-	for i := 0; i < len(rows); i++ {
+	email := rows[0][0]
+	if !strings.Contains(email, "@") {
+		panic("Row 1 does not look like an email")
+	}
+	ret.email = email
+
+	for i := 1; i < len(rows); i++ {
 		row := rows[i]
 		if len(row) != 2 {
 			panic(fmt.Sprintf("Row %s does not have two records", row))
@@ -98,11 +111,12 @@ func parseGuests(rows [][]string) guests {
 	if numTwoGuests == 0 {
 		panic("Found no two-guests!")
 	}
+	ret.guests = guests
 
-	return guests
+	return ret
 }
 
-func loadGuests() guests {
+func loadGuestConfiguration() guestConfiguration {
 	f, err := os.Open(guestFile)
 	if err != nil {
 		log.Fatal(err)
@@ -122,10 +136,9 @@ func loadGuests() guests {
 }
 
 func RequestHandler() requestHandler {
-	guests := loadGuests()
-	//guests["luke massa"] = "https://tripadvisor.com"
-	//guests["nick andersen"] = "https://twitter.com"
+	guestConfiguration := loadGuestConfiguration()
+
 	return requestHandler{
-		guests: guests,
+		guestConfiguration: guestConfiguration,
 	}
 }
