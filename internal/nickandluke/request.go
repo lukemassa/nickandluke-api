@@ -28,7 +28,7 @@ func (rh requestHandler) String() string {
 	for guest, url := range rh.guestConfiguration.guests {
 		sb.WriteString(fmt.Sprintf("%-20s%s\n", guest, url))
 	}
-	sb.WriteString(fmt.Sprintf("Email: %s", rh.guestConfiguration.email))
+	sb.WriteString(fmt.Sprintf("Email: %s\n", rh.guestConfiguration.email))
 
 	return sb.String()
 }
