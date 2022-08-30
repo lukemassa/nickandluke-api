@@ -15,21 +15,21 @@ const twoGuestsUrl = "https://docs.google.com/forms/d/e/1FAIpQLSevxS_HMScw6Nhcru
 const guestFile = "staging/guests.csv"
 
 type guestConfiguration struct {
-	guests map[string]string
-	email  string
+	form  string
+	email string
 }
 
+type guests map[string]guestConfiguration
+
 type requestHandler struct {
-	guestConfiguration guestConfiguration
+	guests guests
 }
 
 func (rh requestHandler) String() string {
 	var sb strings.Builder
-	for guest, url := range rh.guestConfiguration.guests {
-		sb.WriteString(fmt.Sprintf("%-20s%s\n", guest, url))
+	for guest, config := range rh.guests {
+		sb.WriteString(fmt.Sprintf("%-20s%-20s%s\n", guest, config.form, config.email))
 	}
-	sb.WriteString(fmt.Sprintf("Email: %s\n", rh.guestConfiguration.email))
-
 	return sb.String()
 }
 
@@ -42,10 +42,10 @@ type checkResponse struct {
 func (rh requestHandler) CheckGuest(w http.ResponseWriter, r *http.Request) {
 	res := checkResponse{}
 	name := r.URL.Query().Get("name")
-	if val, ok := rh.guestConfiguration.guests[name]; ok {
+	if val, ok := rh.guests[name]; ok {
 		res.Valid = true
-		res.Form = val
-		res.Email = rh.guestConfiguration.email
+		res.Form = val.form
+		res.Email = val.email
 	}
 	js, err := json.Marshal(res)
 	if err != nil {
@@ -62,24 +62,23 @@ func cleanupGuest(guest string) string {
 	return strings.ToLower(strings.TrimSpace(guest))
 }
 
-func parseGuests(rows [][]string) guestConfiguration {
-	ret := guestConfiguration{}
-	guests := make(map[string]string)
+func parseGuests(rows [][]string) guests {
+	guests := make(map[string]guestConfiguration)
 	numOneGuest := 0
 	numTwoGuests := 0
-	email := rows[0][0]
-	if !strings.Contains(email, "@") {
-		panic("Row 1 does not look like an email")
-	}
-	ret.email = email
 
-	for i := 1; i < len(rows); i++ {
+	for i := 0; i < len(rows); i++ {
 		row := rows[i]
 		if len(row) != 2 {
 			panic(fmt.Sprintf("Row %s does not have two records", row))
 		}
 		guest1 := cleanupGuest(row[0])
 		guest2 := cleanupGuest(row[1])
+		email := ""
+		if guest1 == "mailto" {
+			guest2 = ""
+			email = row[1]
+		}
 
 		if guest1 == "" {
 			panic(fmt.Sprintf("Row %s has empty first guest", row))
@@ -95,14 +94,20 @@ func parseGuests(rows [][]string) guestConfiguration {
 			if _, ok := guests[guest2]; ok {
 				panic(fmt.Sprintf("Found duplicate guest %s", guest2))
 			}
-			guests[guest2] = url
+			guests[guest2] = guestConfiguration{
+				form:  url,
+				email: email,
+			}
 		}
 
 		if _, ok := guests[guest1]; ok {
 			panic(fmt.Sprintf("Found duplicate guest %s", guest1))
 		}
 
-		guests[guest1] = url
+		guests[guest1] = guestConfiguration{
+			form:  url,
+			email: email,
+		}
 
 	}
 	if numOneGuest == 0 {
@@ -111,12 +116,11 @@ func parseGuests(rows [][]string) guestConfiguration {
 	if numTwoGuests == 0 {
 		panic("Found no two-guests!")
 	}
-	ret.guests = guests
 
-	return ret
+	return guests
 }
 
-func loadGuestConfiguration() guestConfiguration {
+func loadGuestConfiguration() guests {
 	f, err := os.Open(guestFile)
 	if err != nil {
 		log.Fatal(err)
@@ -136,9 +140,9 @@ func loadGuestConfiguration() guestConfiguration {
 }
 
 func RequestHandler() requestHandler {
-	guestConfiguration := loadGuestConfiguration()
+	guests := loadGuestConfiguration()
 
 	return requestHandler{
-		guestConfiguration: guestConfiguration,
+		guests: guests,
 	}
 }
